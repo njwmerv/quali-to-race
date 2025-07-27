@@ -50,36 +50,40 @@ with open("./data/races.csv", 'r', encoding='utf-8') as racesCSV:
 
 ### Results Data
 
-def fixRace(race):
-    for racer in race[FINAL]:
-        if racer[POS] == "\\N": racer[POS] = len(race[FINAL]) + 1
-        else: racer[POS] = int(racer[POS])
-    race[QUALI].sort(key=lambda x: x[POS])
-    race[FINAL].sort(key=lambda x: x[POS])
+def fixRace(currentRace: list[dict]):
+    for racer in currentRace:
+        if racer[FINAL] == "\\N": racer[FINAL] = len(currentRace) + 1
+        else: racer[FINAL] = int(racer[FINAL])
+    currentRace.sort(key=lambda x: x[FINAL])
 
 with open("./data/results.csv", 'r', encoding='utf-8') as resultsCSV:
     reader = csv.reader(resultsCSV)
 
     header = next(reader)
+    ID: str = "id"
+    NAME: str = "name"
+    STANDING: str = "standing"
     QUALI: str = "qualifying"
     FINAL: str = "final"
-    NAME: str = "name"
-    POS: str = "pos"
 
-    results = []
-    currentRace = "18"
-    race = {QUALI:[], FINAL:[]}
+    results: list[dict] = []
+    currentID: str = "18"
+    currentRace: list[dict] = []
     for row in reader:
-        if row[1] != currentRace:
-            currentRace = row[1]
-            results.append(race)
-            race[QUALI].clear()
-            race[FINAL].clear()
-        driverName: str = drivers[row[2]][NAME]
-        race[QUALI].append({NAME: driverName, POS: int(row[5])})
-        race[FINAL].append({NAME: driverName, POS: row[6]})
-    fixRace(race)
-    results.append(race)
+        if row[1] != currentID:
+            fixRace(currentRace)
+            results.append({ID: currentID, STANDING: currentRace.copy()})
+            currentID = row[1]
+            currentRace.clear()
+
+        currentRace.append({
+            NAME: drivers[row[2]][NAME],
+            QUALI: int(row[5]),
+            FINAL: row[6]
+        })
+
+    fixRace(currentRace)
+    results.append({ID: currentID, STANDING: currentRace.copy()})
 
 # results_file_name: str = "data/results.json"
 # with open(results_file_name, 'w') as resultsJSON:
